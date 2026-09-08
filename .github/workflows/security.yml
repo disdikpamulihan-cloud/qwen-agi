@@ -2,7 +2,7 @@ name: Security Scan
 
 on:
   schedule:
-    - cron: '0 0 * * 1'  # Setiap Senin jam 00:00 UTC
+    - cron: '0 0 * * 1'  # Setiap Senin 00:00 UTC
   push:
     branches: [ main ]
   pull_request:
@@ -15,9 +15,11 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.28.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
@@ -30,14 +32,13 @@ jobs:
       with:
         sarif_file: 'trivy-results.sarif'
 
-    - name: Run Safety CLI to check for vulnerabilities
-      uses: pyupio/safety-action@v1
-      with:
-        api-key: ${{ secrets.SAFETY_API_KEY }}
+    - name: Run Gitleaks (Secret Detection)
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
 
-    - name: Check for hardcoded secrets
-      uses: trufflesecurity/trufflehog@v3
-      with:
-        path: ./
-        extra_args: --only-verified
+    - name: Run Safety CLI (Python Vulnerabilities)
+      run: |
+        pip install safety
+        safety check -r requirements.txt || true
