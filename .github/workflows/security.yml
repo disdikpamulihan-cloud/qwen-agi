@@ -2,7 +2,7 @@ name: Security Scan
 
 on:
   schedule:
-    - cron: '0 0 * * 1'  # Setiap Senin 00:00 UTC
+    - cron: '0 0 * * 1'  # Senin 00:00 UTC
   push:
     branches: [ main ]
   pull_request:
@@ -38,7 +38,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
 
-    - name: Run Safety CLI (Python Vulnerabilities)
-      run: |
-        pip install safety
-        safety check -r requirements.txt || true
+    - name: Install Safety CLI
+      run: pip install safety
+
+    - name: Check Python dependencies for vulnerabilities
+      run: safety check -r requirements.txt || true
