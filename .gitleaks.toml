@@ -1,0 +1,22 @@
+title = "Gitleaks Config"
+
+[allowlist]
+  description = "Global Allowlist"
+  paths = [
+    '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
+    '''(go|node|venv|\.git)/''',
+    '''\.env\.example$''',
+    '''README\.md$'''
+  ]
+
+[[rules]]
+  id = "telegram-bot-token"
+  description = "Telegram Bot Token"
+  regex = '''[0-9]{8,10}:[a-zA-Z0-9_-]{35}'''
+  tags = ["telegram", "bot"]
+
+[[rules]]
+  id = "dashscope-api-key"
+  description = "DashScope API Key"
+  regex = '''sk-[a-zA-Z0-9]{20,}'''
+  tags = ["dashscope", "api"]
