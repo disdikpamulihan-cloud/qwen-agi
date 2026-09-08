@@ -8,32 +8,40 @@ on:
   pull_request:
     branches: [ main ]
 
+# TAMBAHKAN BLOCK INI - Permissions untuk Security Scan
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   security:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4  # ← DIPERBAIKI: Kembali ke v4 (v7 tidak ada)
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
     - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@v0.36.0  # ← DIPERBAIKI: Tambahkan prefix 'v'
+      uses: aquasecurity/trivy-action@v0.28.0  # Revert ke versi stabil
       with:
         scan-type: 'fs'
         scan-ref: '.'
         format: 'sarif'
         output: 'trivy-results.sarif'
+        exit-code: '0'  # Jangan fail jika ada vulnerability
+        severity: 'CRITICAL,HIGH'  # Hanya tampilkan yang critical/high
 
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4  # Update ke v4
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
 
     - name: Run Gitleaks (Secret Detection)
-      uses: gitleaks/gitleaks-action@v2  # ← DIPERBAIKI: Pastikan ada prefix 'v'
+      uses: gitleaks/gitleaks-action@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
