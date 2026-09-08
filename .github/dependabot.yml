@@ -1,24 +1,5 @@
 version: 2
 updates:
-  # Python dependencies
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Asia/Jakarta"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "your-username"
-    labels:
-      - "dependencies"
-      - "python"
-    commit-message:
-      prefix: "deps"
-      include: "scope"
-
-  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -35,21 +16,11 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
-
-  # Docker
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-      timezone: "Asia/Jakarta"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "your-username"
-    labels:
-      - "dependencies"
-      - "docker"
-    commit-message:
-      prefix: "docker"
-      include: "scope"
+    # ← TAMBAHAN PENTING: Batasi update hanya ke major version yang stabil
+    groups:
+      github-actions:
+        patterns:
+          - "actions/*"
+        update-types:
+          - "minor"
+          - "patch"
