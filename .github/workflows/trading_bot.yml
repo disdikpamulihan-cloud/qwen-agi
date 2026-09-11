@@ -3,7 +3,7 @@ name: Singularity Quantitative Trading Bot
 on:
   workflow_dispatch: # Jalankan manual dari tab Actions
   schedule:
-    # Berjalan otomatis setiap 6 jam (bisa disesuaikan)
+    # Berjalan otomatis setiap 6 jam
     - cron: '0 */6 * * *'
 
 # FITUR ANTI-SPAM: Mencegah eksekusi ganda jika workflow ditrigger ulang
@@ -45,5 +45,6 @@ jobs:
           LOG_LEVEL: "INFO"
           LOGS_DIR: "logs"
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python main.py
