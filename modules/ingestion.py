@@ -1,6 +1,6 @@
 """
 Module 1 & 8: Async Ingestion & Self-Healing Daemon (Binance PAXG/Emas Edition)
-Optimized with Geo-block Auto-Fallback for GitHub Actions Runner
+Optimized with Multi-Exchange Geo-block Auto-Fallback for GitHub Actions Runner
 """
 import asyncio
 import json
@@ -17,8 +17,7 @@ class M1_AsyncIngestion:
         self.q = asyncio.Queue()
         self.ws = None
         
-        # Daftar endpoint WebSocket untuk PAXG/USDT (Gold)
-        # Mengatasi HTTP 451 (Geo-blocking) di GitHub Actions Runner (AS)
+        # Daftar endpoint WebSocket untuk data PAXG/Gold yang kompatibel dengan server AS
         self.endpoints = [
             {
                 "name": "Binance US",
@@ -53,12 +52,8 @@ class M1_AsyncIngestion:
             try:
                 logger.info(f"🔌 Connecting to {ep_name} WebSocket: {uri}")
                 
-                # Menambahkan user-agent agar koneksi WebSocket tidak gampang ditolak
-                headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-                }
-                
-                async with websockets.connect(uri, extra_headers=headers) as ws:
+                # Menghubungkan WebSocket tanpa extra_headers yang memicu TypeError
+                async with websockets.connect(uri) as ws:
                     self.ws = ws
                     logger.info(f"✅ Connected to {ep_name} ({self.symbol} stream)")
                     
@@ -78,7 +73,7 @@ class M1_AsyncIngestion:
             except Exception as e:
                 logger.error(f"❌ Ingestion error on {ep_name}: {e}")
                 
-                # Berganti ke endpoint berikutnya jika terkena HTTP 451 / blokir
+                # Berganti ke endpoint berikutnya jika ada kegagalan jaringan
                 self.current_ep_idx = (self.current_ep_idx + 1) % len(self.endpoints)
                 next_ep_name = self.endpoints[self.current_ep_idx]["name"]
                 logger.info(f"🔄 Switching ingestion endpoint to: {next_ep_name}")
