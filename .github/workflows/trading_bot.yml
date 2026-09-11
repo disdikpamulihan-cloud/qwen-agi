@@ -1,14 +1,14 @@
-name: Singularity AGI Trading Bot Runner
+name: Singularity Quantitative Trading Bot
 
 on:
-  workflow_dispatch: # Pemicu manual via tombol GitHub Actions
+  workflow_dispatch: # Jalankan manual dari tab Actions
   schedule:
-    # Contoh berjalan otomatis setiap jam (sesuai kebutuhan)
-    - cron: '0 * * * *'
+    # Berjalan otomatis setiap 6 jam (bisa disesuaikan)
+    - cron: '0 */6 * * *'
 
-# Mencegah eksekusi ganda bersamaan (Anti-Spam)
+# FITUR ANTI-SPAM: Mencegah eksekusi ganda jika workflow ditrigger ulang
 concurrency:
-  group: singularity-bot-execution
+  group: singularity-quant-execution
   cancel-in-progress: true
 
 jobs:
@@ -34,18 +34,16 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # Opsional: Membersihkan log atau state lama sebelum menjalankan bot
-      - name: Clean Old State/Logs
+      - name: Clean Old State & Logs
         run: |
           rm -f state.json
           rm -f logs/*.log
+          echo "🧹 Environment cleaned!"
 
-      - name: Run Singularity Bot
+      - name: Run Quantitative Bot
         env:
-          # Deklarasikan variabel rahasia API Key di menu Settings > Secrets GitHub
           LOG_LEVEL: "INFO"
           LOGS_DIR: "logs"
-          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
           python main.py
