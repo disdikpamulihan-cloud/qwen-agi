@@ -1,14 +1,14 @@
-"""
-SINGULARITY AGI TRADING BOT - Main Entry Point (Optimized for Pure Technical Execution)
-"""
+""" SINGULARITY AGI TRADING BOT - Main Entry Point (Optimized for Pure Technical Execution + Instant Telegram Alerts) """
 import asyncio
 import logging
 import signal
 import sys
+import os
 from datetime import datetime
 from collections import deque
 import numpy as np
 import pandas as pd
+import aiohttp
 
 from config import Config
 from modules.ingestion import M1_AsyncIngestion, M8_SelfHealingDaemon
@@ -32,8 +32,35 @@ logging.basicConfig(
 )
 logger = logging.getLogger("SingularityAGI")
 
+async def send_telegram_alert(message: str):
+    """Mengirim pesan notifikasi instan ke Telegram"""
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    
+    if not token or not chat_id:
+        logger.warning("⚠️ Telegram Token atau Chat ID belum terpasang di Secrets/Env!")
+        return
+        
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload, timeout=10) as resp:
+                if resp.status == 200:
+                    logger.info("📩 Notifikasi Telegram berhasil terkirim!")
+                else:
+                    err_text = await resp.text()
+                    logger.error(f"❌ Gagal kirim Telegram (Status {resp.status}): {err_text}")
+    except Exception as e:
+        logger.error(f"❌ Error pengiriman Telegram: {e}")
+
 class SingularityOrchestrator:
-    """Main orchestrator for quantitative trading modules (Pure Algorithmic Mode)"""
+    """Main orchestrator for quantitative trading modules (Pure Algorithmic + Telegram Alerts)"""
     
     def __init__(self):
         logger.info("🚀 Initializing SINGULARITY Quantitative Trading Bot...")
@@ -169,8 +196,7 @@ class SingularityOrchestrator:
             atr = np.mean(np.abs(np.diff(prices[-20:])))
             price_diff = abs(prices[-1] - kalman_est)
             
-            # --- PURE QUANTITATIVE TRIGGER (BYPASS AI) ---
-            # Trigger jika terjadi deviasi harga signifikan terhadap Kalman Filter & HMM State aman
+            # --- PURE QUANTITATIVE TRIGGER + TELEGRAM NOTIFICATION ---
             if price_diff > (atr * 1.2) and hmm_state != 2 and lyap < 0.6:
                 self.is_processing = True
                 
@@ -180,9 +206,25 @@ class SingularityOrchestrator:
                 sl = prices[-1] - (atr * 1.5) if direction == "BUY" else prices[-1] + (atr * 1.5)
                 tp = prices[-1] + (atr * 3.0) if direction == "BUY" else prices[-1] - (atr * 3.0)
                 
+                # Format & Pengiriman Notifikasi Telegram
+                telegram_msg = (
+                    f"🚨 *SINGULARITY QUANT SIGNAL* 🚨 "
+                    f"📊 *Pair*: `PAXG/USDT (Gold)` "
+                    f"📈 *Action*: `{direction}` "
+                    f"💰 *Entry Price*: `{prices[-1]:.2f}` "
+                    f"🎯 *Take Profit*: `{tp:.2f}` "
+                    f"🛑 *Stop Loss*: `{sl:.2f}` "
+                    f"📉 *Kalman Trend*: `{kalman_est:.2f}` "
+                    f"⚡ *ATR Volatility*: `{atr:.2f}` "
+                    f"⏰ *Time*: `{datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}`"
+                )
+                
+                # Kirim notifikasi Telegram secara asynchronous
+                await send_telegram_alert(telegram_msg)
+                
                 # Log telemetry sinyal
                 logger.info(
-                    f"📤 Signal Generated: {direction} @ {prices[-1]:.2f} | "
+                    f"📤 Signal Generated & Sent: {direction} @ {prices[-1]:.2f} | "
                     f"Kalman: {kalman_est:.2f} | SL: {sl:.2f} | TP: {tp:.2f}"
                 )
                 
@@ -220,7 +262,7 @@ class SingularityOrchestrator:
 
 def signal_handler(sig, frame):
     """Handle graceful shutdown"""
-    logger.info("\n🛑 Shutting down gracefully...")
+    logger.info(" 🛑 Shutting down gracefully...")
     sys.exit(0)
 
 if __name__ == "__main__":
@@ -231,7 +273,7 @@ if __name__ == "__main__":
         orchestrator = SingularityOrchestrator()
         asyncio.run(orchestrator.run())
     except KeyboardInterrupt:
-        logger.info("\n🛑 Bot stopped by user")
+        logger.info(" 🛑 Bot stopped by user")
     except Exception as e:
         logger.critical(f"💥 Fatal error: {e}", exc_info=True)
         sys.exit(1)
