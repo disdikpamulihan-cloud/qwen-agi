@@ -1,11 +1,14 @@
 """
-SINGULARITY AGI TRADING BOT - Main Entry Point (Optimized for High Accuracy)
+SINGULARITY AGI TRADING BOT - Main Entry Point (Optimized for Pure Technical Execution)
 """
 import asyncio
 import logging
 import signal
 import sys
 from datetime import datetime
+from collections import deque
+import numpy as np
+import pandas as pd
 
 from config import Config
 from modules.ingestion import M1_AsyncIngestion, M8_SelfHealingDaemon
@@ -17,7 +20,6 @@ from modules.advanced_math import M15_QuantumAnnealing, M16_OFI, M20_Adversarial
 from modules.security import M21_CryptoChecksum, M38_VRF, M44_ZKP
 from modules.system import M13_Telemetry, M17_GCDaemon, M25_ZeroCopyMemory, M29_Heartbeat, M33_SIMD_JIT, M34_PipelineDecoupling, M40_DynamicThrottling
 from modules.game_theory import M10_XAI, M18_CorrelationSentinel, M35_GameTheory, M41_NeuroSymbolic
-from modules.qwen_engine import M46_QwenCognitiveEngine
 
 # Configure logging
 logging.basicConfig(
@@ -31,27 +33,27 @@ logging.basicConfig(
 logger = logging.getLogger("SingularityAGI")
 
 class SingularityOrchestrator:
-    """Main orchestrator for all 46 modules"""
+    """Main orchestrator for quantitative trading modules (Pure Algorithmic Mode)"""
     
     def __init__(self):
-        logger.info("🚀 Initializing SINGULARITY AGI Trading Bot...")
+        logger.info("🚀 Initializing SINGULARITY Quantitative Trading Bot...")
         
         # Validate configuration
         Config.validate()
         
-        # Initialize all 46 modules
+        # Initialize active modules
         self.m1 = M1_AsyncIngestion()
         self.m2 = M2_OnlineMLCore()
         self.m3 = M3_StatePersistence()
         self.m4 = M4_NoiseFilterZScore()
-        self.m5 = None  # Will be initialized with Telegram credentials
+        self.m5 = None  
         self.m6 = M6_MTFConfluence()
         self.m7 = M7_DynamicRROptimizer()
         self.m8 = M8_SelfHealingDaemon()
         self.m9 = M9_AnomalyGuard()
         self.m10 = M10_XAI()
         self.m11 = M11_MacroAwareness()
-        self.m12 = None  # Shadow mode handled in process_tick
+        self.m12 = None  
         self.m13 = M13_Telemetry()
         self.m14 = M14_RLHF()
         self.m15 = M15_QuantumAnnealing()
@@ -84,20 +86,19 @@ class SingularityOrchestrator:
         self.m42 = M42_QuantumAmplitude()
         self.m43 = M43_KolakoskiFractal()
         self.m44 = M44_ZKP()
-        self.m45 = None  # Self-evolving code (optional)
-        self.m46 = M46_QwenCognitiveEngine()
+        self.m45 = None  
+        self.m46 = None  # Qwen AI Disabled
         
         # Data buffers
-        from collections import deque
         self.ticks = deque(maxlen=1000)
         self.dxy_proxy = deque(maxlen=1000)
         self.shadow_history = deque(maxlen=20)
-        self.is_processing_ai = False
+        self.is_processing = False
         
         # Load persisted state if exists
         self._load_state()
         
-        logger.info("✅ All 46 modules initialized successfully")
+        logger.info("✅ All core quantitative modules initialized successfully")
     
     def _load_state(self):
         """Load model state from disk"""
@@ -116,17 +117,17 @@ class SingularityOrchestrator:
         logger.debug("💾 Model state saved")
     
     async def process_tick(self, tick):
-        """Process incoming tick through all modules"""
+        """Process incoming tick through signal modules"""
         try:
             price = float(tick['quote'])
             epoch = tick['epoch']
             self.ticks.append((epoch, price))
-            self.dxy_proxy.append(price * 0.995)  # Simulated DXY correlation
+            self.dxy_proxy.append(price * 0.995)
             
-            import numpy as np
             prices = np.array([t[1] for t in self.ticks])
             
-            if len(prices) < 100 or self.is_processing_ai:
+            # Membutuhkan minimal 100 data tick untuk kalkulasi indikator
+            if len(prices) < 100 or self.is_processing:
                 return
             
             # System maintenance
@@ -144,13 +145,10 @@ class SingularityOrchestrator:
                 logger.debug("📊 High volatility regime, skipping")
                 return
             
-            # Signal processing
+            # Signal processing (Kalman & Fractional Calculus)
             filtered = self.m4.filter(prices[-100:])
             frac = self.m24.gl_derivative(filtered)
             kalman_est = self.m26.update(np.array([[prices[-1]]]))
-            
-            # Multi-timeframe analysis (15m & 1h)
-            m15, h1 = self.m6.resample(list(self.ticks)[-300:])
             
             # Feature engineering
             features = np.array([
@@ -162,77 +160,52 @@ class SingularityOrchestrator:
             ])
             features = self.m20.inject(features)
             
-            # ML prediction
+            # ML prediction & math metrics
             pred = self.m2.update(features, prices[-1])
-            
-            # AI models
             hmm_state = self.m23.classify(np.diff(prices[-100:]).reshape(-1, 1))
             lyap = self.m32.lyapunov(prices[-100:])
-            tda_score = self.m30.persistent_homology(prices[-50:].reshape(-1, 1))
-            entropy = self.m28.shannon(np.diff(prices[-50:]))
             
-            # Correlation & volatility
-            corr = self.m18.check(prices, self.dxy_proxy)
-            import pandas as pd
-            utc_hour = pd.to_datetime(epoch, unit='s').hour
-            vol_profile = self.m19.profile(utc_hour, np.std(np.diff(prices[-50:])))
-            
-            # Order flow
-            ofi = self.m16.calc(
-                np.random.rand(10),
-                np.random.rand(10),
-                np.random.rand(10),
-                np.random.rand(10)
-            )
-            
-            # Trigger condition for Qwen AI
+            # Calculation ATR
             atr = np.mean(np.abs(np.diff(prices[-20:])))
-            if abs(prices[-1] - kalman_est) > (atr * 1.5) and hmm_state != 2 and lyap < 0.5:
-                self.is_processing_ai = True
+            price_diff = abs(prices[-1] - kalman_est)
+            
+            # --- PURE QUANTITATIVE TRIGGER (BYPASS AI) ---
+            # Trigger jika terjadi deviasi harga signifikan terhadap Kalman Filter & HMM State aman
+            if price_diff > (atr * 1.2) and hmm_state != 2 and lyap < 0.6:
+                self.is_processing = True
                 
-                market_context = {
-                    "price": prices[-1],
-                    "kalman_trend": "UP" if prices[-1] > kalman_est else "DOWN",
-                    "hmm_state": int(hmm_state),
-                    "lyapunov": round(lyap, 3),
-                    "momentum": round((prices[-1] - prices[-20]) / prices[-20] * 100, 2),
-                    "atr": round(atr, 2),
-                    "dxy_corr": round(corr, 2)
-                }
+                # Penentuan Arah (BUY / SELL) murni indikator teknikal
+                direction = "BUY" if prices[-1] > kalman_est else "SELL"
                 
-                # Call Qwen AI for validation
-                ai_decision = await self.m46.analyze_market_state(market_context)
+                sl = prices[-1] - (atr * 1.5) if direction == "BUY" else prices[-1] + (atr * 1.5)
+                tp = prices[-1] + (atr * 3.0) if direction == "BUY" else prices[-1] - (atr * 3.0)
                 
-                # STRICT FILTERING: Minimal Confidence 85% (0.85)
-                if ai_decision.get("action") in ["BUY", "SELL"] and ai_decision.get("confidence_score", 0) >= 0.85:
-                    direction = ai_decision["action"]
-                    sl = prices[-1] - (atr * 1.5) if direction == "BUY" else prices[-1] + (atr * 1.5)
-                    tp = prices[-1] + (atr * 3.0) if direction == "BUY" else prices[-1] - (atr * 3.0)
-                    
-                    # Log Telemetry and Signal
-                    logger.info(f"📤 High-Precision Signal Generated: {direction} @ {prices[-1]:.2f} (Conf: {ai_decision['confidence_score']*100:.1f}%)")
-                    
-                    await self.m13.log({
-                        "signal": direction,
-                        "entry": prices[-1],
-                        "confidence": ai_decision['confidence_score'],
-                        "ai_reasoning": ai_decision['reasoning']
-                    })
-                    
-                    # Update shadow mode
-                    pnl = pred - prices[-1]
-                    self.shadow_history.append(pnl)
-                    
-                    # Save state
-                    self._save_state()
-                else:
-                    logger.info(f"⏸️ Signal Skipped/Filtered: Action={ai_decision.get('action')}, Confidence={ai_decision.get('confidence_score', 0)}")
+                # Log telemetry sinyal
+                logger.info(
+                    f"📤 Signal Generated: {direction} @ {prices[-1]:.2f} | "
+                    f"Kalman: {kalman_est:.2f} | SL: {sl:.2f} | TP: {tp:.2f}"
+                )
                 
-                self.is_processing_ai = False
+                await self.m13.log({
+                    "signal": direction,
+                    "entry": prices[-1],
+                    "sl": sl,
+                    "tp": tp,
+                    "kalman": kalman_est,
+                    "reasoning": "Pure Technical (Kalman Deviation + ATR Breakout)"
+                })
+                
+                # Update shadow history & save state
+                pnl = pred - prices[-1]
+                self.shadow_history.append(pnl)
+                self._save_state()
+                
+                self.is_processing = False
         
         except Exception as e:
             logger.error(f"❌ Error processing tick: {e}", exc_info=True)
-    
+            self.is_processing = False
+
     async def run(self):
         """Main execution loop"""
         logger.info("🎯 Starting main execution loop...")
